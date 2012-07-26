@@ -4,7 +4,7 @@ from django.contrib import admin
 # used for rich textareas
 from ckeditor.widgets import CKEditorWidget
 
-from models import Tag, Post, Category, Slide, SlideShow
+from models import Tag, Post, Category, Slide, SlideShow, SlideShowSlide
 from sorl.thumbnail.admin import AdminImageMixin
 
 ################################################################################
@@ -45,6 +45,7 @@ admin.site.register(Category)
 
 admin.site.register(Slide)
 admin.site.register(SlideShow)
+admin.site.register(SlideShowSlide)
 
 #class PhotoAdmin(AdminImageMixin, admin.ModelAdmin):
 #    pass

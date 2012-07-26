@@ -181,10 +181,24 @@ class Slide(models.Model):
 class SlideShow(models.Model):
     """Groups slides into slideshows.
     """
-    slides = models.ManyToManyField(Slide)
+    slides = models.ManyToManyField(Slide, through='SlideShowSlide')
     name = models.CharField(max_length=32, unique=True)
     date = models.DateField(auto_now_add=True)
     description = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.date)
+
+
+class SlideShowSlide(models.Model):
+    """
+    """
+    slide = models.ForeignKey(Slide)
+    slideshow = models.ForeignKey(SlideShow)
+    order = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ('order',)
+
+    def __unicode__(self):
+        return "%s-%s" % (self.slideshow, self.slide)
