@@ -159,7 +159,7 @@ class Slide(models.Model):
 
     Slides are layered content, containing a background and a post.
     """
-    post = models.ForeignKey(Post, null=True, on_delete=models.SET_NULL)
+    post = models.ForeignKey(Post, blank=True, null=True, on_delete=models.SET_NULL)
     image = models.ImageField(upload_to="images", blank=True, null=True)
     thumbnail_text = models.CharField(max_length=32)
 
