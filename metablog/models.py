@@ -175,7 +175,7 @@ class Slide(models.Model):
     media_url = models.URLField(null=True, blank=True)
 
     def __unicode__(self):
-        return self.post.title
+        return self.thumbnail_text
 
 
 class SlideShow(models.Model):
@@ -183,6 +183,7 @@ class SlideShow(models.Model):
     """
     slides = models.ManyToManyField(Slide, through='SlideShowSlide')
     name = models.CharField(max_length=32, unique=True)
+    title = models.CharField(max_length=128, blank=True)
     date = models.DateField(auto_now_add=True)
     description = models.TextField(blank=True, null=True)
 
