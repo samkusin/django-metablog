@@ -4,8 +4,6 @@ Django Model for the Metablog Application.
 Association between tags and posts.
 """
 
-from datetime import datetime
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -19,6 +17,8 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+
+################################################################################
 
 class Post(models.Model):
     """A single blog post.
@@ -40,11 +40,12 @@ class Post(models.Model):
     slug = models.SlugField()
     post_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    status = models.SmallIntegerField(choices=STATUS_CHOICES)
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, db_index=True)
     prev_post = models.OneToOneField('self', related_name='next', null=True, blank=True)
     next_post = models.OneToOneField('self', related_name='prev', null=True, blank=True)
     tags = models.ManyToManyField(Tag)
     text = models.TextField()
+    atj_word_count = models.SmallIntegerField(verbose_name='After the Jump word count', default=150)
 
     def __unicode__(self):
         return self.title
@@ -52,57 +53,7 @@ class Post(models.Model):
     # Django overrides
     @models.permalink
     def get_absolute_url(self):
-        return ('view_article', [self.slug])
-
-    # Utilities
-    @staticmethod
-    def get_posts_within_date_range(latest_post_time, earliest_post_time, tags=None):
-        """Returns an array of posts with post time, descending order by post creation time.
-                ( time: datetime, post:Post )
-
-        @param latest_post_time The latest time and date for the post search.  Only posts created
-            on or before this value are returned.
-        @param earliest_post_time The earliest time and date for the post search.  Only posts created
-            after (but not *on*) this value are returned.
-        @param tags (optional) Filter posts returned with the array of Tags.  This is an 'or' operation
-            - posts are tagged with at least one of the Tags specified.
-        @return array of posts
-        """
-        if tags:
-            posts = Post.objects.filter(
-                    post_date__lte=latest_post_time, post_date__gt=earliest_post_time
-                ).filter(
-                    tags__in=tags
-                )
-        else:
-            posts = Post.objects.filter(
-                    post_date__lte=latest_post_time, post_date__gt=earliest_post_time
-                )
-
-        # build result list
-        return posts
-
-    @staticmethod
-    def get_posts_before_post_index(num_posts, first_post_offset=0, tags=None):
-        """Returns an array of posts relative to the specified post offset.  Common use cases
-        include retrieving a specified number of posts for a blog page.   Callers can retrieve
-        a subset of all posts within the database using this method.
-
-        @param num_posts Maximum number of posts to retrieve.
-        @param first_post_index Returns posts starting with the post at this specified offset within
-            the database.
-        @param tags (optional) Filter posts returned with the array of Tags.  This is an 'or' operation
-            - posts are tagged with at least one of the Tags specified.
-        @return An array of Posts.
-        """
-        posts = None
-
-        if tags:
-            posts = Post.objects.filter(tags__in=tags)[first_post_offset:num_posts]
-        else:
-            posts = Post.objects.all()[first_post_offset:num_posts]
-
-        return posts
+        return ('metablog_article', [self.slug])
 
 
 ################################################################################
@@ -125,30 +76,7 @@ class Category(models.Model):
     # Django Overrides
     @models.permalink
     def get_absolute_url(self):
-        return ('view_category', [self.tag.slug])
-
-    # Utilities
-    def get_posts_within_date_range(self, latest_post_time, earliest_post_time):
-        """Return posts within a specific category.
-
-        @param latest_post_time The latest time and date for the post search.  Only posts created
-            on or before this value are returned.
-        @param earliest_post_time The earliest time and date for the post search.  Only posts created
-            after (but not *on*) this value are returned.
-        @return array posts
-        """
-        tags = [self.tag]
-        return Post.get_posts_within_date_range(latest_post_time, earliest_post_time, tags)
-
-    def get_posts_before_post_index(self, num_posts, first_post_offset=0):
-        """Returns an array of posts relative to the specified post offset
-        @param num_posts Maximum number of posts to retrieve.
-        @param first_post_index Returns posts starting with the post at this specified offset within
-            the database.
-        @return An array of Posts.
-        """
-        tags = [self.tag]
-        return Post.get_posts_before_post_index(num_posts, first_post_offset, tags)
+        return ('metablog_category', [self.tag.slug])
 
 
 ################################################################################
@@ -203,3 +131,18 @@ class SlideShowSlide(models.Model):
 
     def __unicode__(self):
         return "%s-%s" % (self.slideshow, self.slide)
+
+
+################################################################################
+
+class Link(models.Model):
+    """
+    Site name with URL, Categorization (not by Category though.)
+    """
+    tag = models.ForeignKey(Tag)
+    rank = models.SmallIntegerField()
+    title = models.CharField(max_length=64)
+    url = models.URLField()
+
+    def __unicode__(self):
+        return self.title
