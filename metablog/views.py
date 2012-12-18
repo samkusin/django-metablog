@@ -192,7 +192,7 @@ def home(request, category_slug, year, month):
         @param category_slug (optional) Incoming category_slug (used in the request URL.)
     """
     # find category if passed into the request
-    categories, statuses_to_display, archives, blogroll = common(request.user.is_authenticated)
+    categories, statuses_to_display, archives, blogroll = common(request.user.is_authenticated())
 
     article_post_index = 0
     if 'start' in request.GET:
