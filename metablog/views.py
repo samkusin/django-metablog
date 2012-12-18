@@ -215,23 +215,29 @@ def home(request, category_slug, year, month):
     # cap post start and end ranges based on available posts
     post_count = all_posts.count()
     post_page_count = settings.CK_METABLOG_PER_PAGE_COUNT
-    if article_post_index < 0:
-        article_post_index = 0
-    elif article_post_index >= post_count:
-        article_post_index = post_count - 1
-    article_post_index_end = min(article_post_index + post_page_count, post_count)
 
-    posts = all_posts[article_post_index:article_post_index_end]
+    if post_count > 0:
+        if article_post_index < 0:
+            article_post_index = 0
+        elif article_post_index >= post_count:
+            article_post_index = post_count - 1
+        article_post_index_end = min(article_post_index + post_page_count, post_count)
 
-    # determine whether we need links to prior or next page posts
-    if article_post_index > 0:
-        next_post_index = max(article_post_index - post_page_count, 0)
+        posts = all_posts[article_post_index:article_post_index_end]
+
+        # determine whether we need links to prior or next page posts
+        if article_post_index > 0:
+            next_post_index = max(article_post_index - post_page_count, 0)
+        else:
+            next_post_index = -1
+        if article_post_index + post_page_count < post_count:
+            prev_post_index = min(article_post_index + post_page_count, post_count - 1)
+        else:
+            prev_post_index = -1
     else:
         next_post_index = -1
-    if article_post_index + post_page_count < post_count:
-        prev_post_index = min(article_post_index + post_page_count, post_count - 1)
-    else:
         prev_post_index = -1
+        posts = None
 
     first_post_id = None
     if posts and len(posts) > 0:
