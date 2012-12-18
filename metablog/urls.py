@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, url
-from cinekine.metablog.feeds import PostFeed
+from cinekine.metablog.feeds import PostFeed, AtomPostFeed
 
 urlpatterns = patterns(
     '',
@@ -13,10 +13,14 @@ urlpatterns = patterns(
     url(r'^archive/(?P<year>[0-9]+)/$', 'cinekine.metablog.views.home', {'category_slug': None, 'month': 0},
         name='metablog_archive_year'),
     # View by Category
+    url(r'^category/(?P<category_slug>[a-zA-Z0-9\^-]+)/rss/$', PostFeed(),
+        name="rss-category-latest"),
+    url(r'^category/(?P<category_slug>[a-zA-Z0-9\^-]+)/atom/$', AtomPostFeed(), name='atom-category-latest'),
     url(r'^category/(?P<category_slug>[a-zA-Z0-9\^-]+)/$', 'cinekine.metablog.views.home', {'year': 0, 'month': 0},
         name='metablog_category'),
     # Default Home page
-    url(r'^rss/$', PostFeed(), {'category_id': None}, name="rss-latest"),
+    url(r'^rss/$', PostFeed(), {'category_slug': None}, name="rss-latest"),
+    url(r'^atom/$', AtomPostFeed(), {'category_slug': None}, name='atom-latest'),
     url(r'^$', 'cinekine.metablog.views.home', {'category_slug': None, 'year': 0, 'month': 0},
         name='metablog_home'),
 )

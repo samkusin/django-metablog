@@ -1,44 +1,52 @@
 from django.contrib.syndication.views import Feed
-from django.core.urlresolvers import reverse
-from django.shortcuts import get_object_or_404
 from django.conf import settings
-from django.utils import text, html
+from django.http import Http404
+from django.utils.feedgenerator import Atom1Feed
 
 from models import Post, Category
 
 
 class PostFeed(Feed):
 
-    def get_object(self, request, category_id):
-        if category_id is None:
-            return None 
-        return get_object_or_404(Category, pk=category_id)
+    def get_object(self, request, category_slug):
+        if category_slug is None:
+            return None
+        categories = Category.objects.all()
+        for category in categories:
+            if category.tag.slug == category_slug:
+                return category
+
+        raise Http404
 
     def title(self, obj):
+        if obj == None:
+            return settings.CK_SITE_TITLE
         return "%s - %s" % (settings.CK_SITE_TITLE, obj.long_name)
 
-    def title(self):
-        return "%s" % (settings.CK_SITE_TITLE)
-
     def description(self, obj):
-        return "(Heavily editorialized) articles related to %s." % obj.long_name
-
-    def description(self):
-        return "(Heavily editorialized) articles related to gaming, coding, and everything in between."
+        if obj == None:
+            return "Articles related to gaming and software development."
+        return "Articles related to %s." % obj.long_name
 
     def link(self, obj):
+        if obj == None:
+            return '/'
         return obj.get_absolute_url()
 
-    link = '/'
-
     def items(self, obj):
-        return Post.objects.filter(tags__in=obj.tag).order_by("-post_date")[:10]
-
-    def items(self):
-        return Post.objects.all().order_by("-post_date")[:10]
+        if obj == None:
+            return Post.objects.all().order_by("-post_date")[:10]
+        return Post.objects.filter(tags__in=[obj.tag]).order_by("-post_date")[:10]
 
     title_template = 'feeds/post_item_title.html'
     description_template = 'feeds/post_item_description.html'
 
     def item_link(self, item):
         return item.get_absolute_url()
+
+
+class AtomPostFeed(PostFeed):
+    feed_type = Atom1Feed
+
+    def subtitle(self, obj):
+        return self.description(obj)
