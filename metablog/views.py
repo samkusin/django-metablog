@@ -67,7 +67,9 @@ def create_post_archive(posts):
     archive_stack.append([])        # archive list (top-level contains years)
 
     year = -1
+    year_count = 0
     month = -1
+    month_count = 0
 
     for post in posts:
         post_date = post['post_date']
@@ -79,7 +81,12 @@ def create_post_archive(posts):
                 articles = archive_stack.pop()
                 months = archive_stack.pop()
                 months[-1]['articles'] = articles
+                months[-1]['count'] = month_count
+                year_count += month_count
+                month_count = 0
                 archive_stack[-1][-1]['archives'] = months
+                archive_stack[-1][-1]['count'] = year_count
+                year_count = 0
 
             year = post_date.year
             archive = {
@@ -97,6 +104,9 @@ def create_post_archive(posts):
                 # fixup stack - top = articles
                 articles = archive_stack.pop()
                 archive_stack[-1][-1]['articles'] = articles
+                archive_stack[-1][-1]['count'] = month_count
+                year_count += month_count
+                month_count = 0
 
             month = post_date.month
             archive = {
@@ -116,6 +126,7 @@ def create_post_archive(posts):
             'id': post['id']
         }
         archive_stack[-1].append(article)
+        month_count += 1
 
     # final fixup.
     if len(archive_stack) == 3:
@@ -124,7 +135,10 @@ def create_post_archive(posts):
         articles = archive_stack.pop()
         months = archive_stack.pop()
         months[-1]['articles'] = articles
+        months[-1]['count'] = month_count
+        year_count += month_count
         archive_stack[-1][-1]['archives'] = months
+        archive_stack[-1][-1]['count'] = year_count
     else:
         return None
 
