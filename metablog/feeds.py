@@ -28,6 +28,18 @@ class PostFeed(Feed):
             return "Articles related to gaming and software development."
         return "Articles related to %s." % obj.long_name
 
+    def categories(self, obj):
+        if obj == None:
+            categories = Category.objects.all()
+        else:
+            categories = [obj]
+
+        cat_strs = []
+        for category in categories:
+            cat_strs.append(category.long_name)
+
+        return cat_strs
+
     def link(self, obj):
         if obj == None:
             return '/'
