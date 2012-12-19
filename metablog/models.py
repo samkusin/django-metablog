@@ -6,6 +6,9 @@ Association between tags and posts.
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.contrib.sitemaps import ping_google
+from django.conf import settings
 
 
 class Tag(models.Model):
@@ -38,6 +41,7 @@ class Post(models.Model):
     author = models.ForeignKey(User)
     title = models.CharField(max_length=128)
     slug = models.SlugField()
+    create_date = models.DateTimeField(auto_now_add=True, null=True)
     post_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, db_index=True)
@@ -47,6 +51,23 @@ class Post(models.Model):
     text = models.TextField()
     atj_word_count = models.SmallIntegerField(verbose_name='After the Jump word count', default=150)
 
+    NORMAL = 1
+    PREFERRED = 2
+    HIGHLIGHTED = 3
+    PRIORITY_CHOICES = (
+        (NORMAL, 'Normal'),
+        (PREFERRED, 'Preferred'),
+        (HIGHLIGHTED, 'Highlighted'),
+    )
+    search_priority = models.SmallIntegerField(choices=PRIORITY_CHOICES, default=NORMAL)
+    pings = models.SmallIntegerField(editable=False, default=0)
+
+    _original_status = None
+
+    def __init__(self, *args, **kwargs):
+        super(Post, self).__init__(*args, **kwargs)
+        self._original_status = self.status
+
     def __unicode__(self):
         return self.title
 
@@ -54,6 +75,49 @@ class Post(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('metablog_article', [self.slug])
+
+    def save(self, *args, **kwargs):
+        if self._original_status != self.status:
+            # need to update post time if we've officially published an article.
+            if self.status == Post.PUBLISHED or self.status == Post.EXCLUSIVE:
+                self.post_date = timezone.now()
+                if not settings.DEBUG and settings.CK_METABLOG_PING_GOOGLE:
+                    ping_google()
+                    self.pings += 1
+
+        if self.create_date is None:
+            self.create_date = self.post_date
+
+        super(Post, self).save(*args, **kwargs)
+        self._original_status = self.status
+
+    @staticmethod
+    def query(statuses, tags=None, year=0, month=0):
+        """
+        Standard query function for posts.  Multiple views would call this
+        method to retrieve a query set.
+        """
+        if tags != None and len(tags) > 0:
+            posts = Post.objects.filter(
+                tags__in=tags
+            ).filter(
+                status__in=statuses
+            )
+        else:
+            posts = Post.objects.filter(
+                status__in=statuses
+            )
+
+        if year != 0:
+            posts = posts.filter(
+                post_date__year=year
+            )
+        if month != 0:
+            posts = posts.filter(
+                post_date__month=month
+            )
+
+        return posts.order_by("-post_date")
 
 
 ################################################################################

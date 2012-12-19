@@ -133,34 +133,6 @@ def create_post_archive(posts):
     }
 
 
-def query_posts(statuses, tags=None, year=0, month=0):
-    """
-    Standard query function for posts.  Multiple views would call this
-    method to retrieve a query set.
-    """
-    if tags != None and len(tags) > 0:
-        posts = Post.objects.filter(
-            tags__in=tags
-        ).filter(
-            status__in=statuses
-        )
-    else:
-        posts = Post.objects.filter(
-            status__in=statuses
-        )
-
-    if year != 0:
-        posts = posts.filter(
-            post_date__year=year
-        )
-    if month != 0:
-        posts = posts.filter(
-            post_date__month=month
-        )
-
-    return posts.order_by("-post_date")
-
-
 def common(is_admin):
     categories = Category.objects.all()
 
@@ -169,7 +141,7 @@ def common(is_admin):
         statuses_to_display.append(Post.DRAFT)
         statuses_to_display.append(Post.HIDDEN)
 
-    archives = create_post_archive(query_posts(statuses=statuses_to_display))
+    archives = create_post_archive(Post.query(statuses=statuses_to_display))
     blogroll = None
     try:
         favorites_tag = Tag.objects.get(slug='favorite-blog')
@@ -207,10 +179,10 @@ def home(request, category_slug, year, month):
                 search_tags.append(category.tag)
                 selected_category = category
 
-    all_posts = query_posts(statuses_to_display,
-                search_tags,
-                year, month
-            )
+    all_posts = Post.query(statuses_to_display,
+                    search_tags,
+                    year, month
+                )
 
     # cap post start and end ranges based on available posts
     post_count = all_posts.count()
