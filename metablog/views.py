@@ -168,9 +168,42 @@ def common(is_admin):
     return categories, statuses_to_display, archives, blogroll
 
 
+def cull_posts(all_posts, article_post_index, post_page_count):
+    post_count = all_posts.count()
+
+    if post_count > 0:
+        if article_post_index < 0:
+            article_post_index = 0
+        elif article_post_index >= post_count:
+            article_post_index = post_count - 1
+        article_post_index_end = min(article_post_index + post_page_count, post_count)
+
+        posts = all_posts[article_post_index:article_post_index_end]
+
+        # determine whether we need links to prior or next page posts
+        next_post_index = -1
+        if article_post_index > 0:
+            next_post_index = max(article_post_index - post_page_count, 0)
+
+        prev_post_index = -1
+        if article_post_index + post_page_count < post_count:
+            prev_post_index = min(article_post_index + post_page_count, post_count - 1)
+
+    else:
+        next_post_index = -1
+        prev_post_index = -1
+        posts = None
+
+    first_post_id = None
+    if posts and len(posts) > 0:
+        first_post_id = posts[0].id
+
+    return posts, first_post_id, next_post_index, prev_post_index
+
+
 ###############################################################################
 
-def home(request, category_slug, year, month):
+def home(request, category_slug):
     """
         Homepage
 
@@ -194,40 +227,60 @@ def home(request, category_slug, year, month):
                 selected_category = category
 
     all_posts = Post.query(statuses_to_display,
+                    search_tags
+                )
+
+    # cap post start and end ranges based on available posts
+    posts, first_post_id, next_post_index, prev_post_index = cull_posts(all_posts,
+                    article_post_index,
+                    settings.CK_METABLOG_PER_PAGE_COUNT)
+
+    context = {
+        'page_title': settings.CK_SITE_TITLE,
+        'categories': categories,
+        'selected_category': selected_category,
+        'blog_posts': posts,
+        'archives': archives,
+        'blogroll': blogroll,
+        'first_post_id': first_post_id,
+        'next_post_index': next_post_index,
+        'prev_post_index': prev_post_index,
+        'allow_rss_feed': True,
+    }
+
+    # render
+    return render_to_response("home.html",
+        context,
+        context_instance=RequestContext(request)
+    )
+
+
+def archive(request, year, month):
+    """
+        Homepage
+
+        @param request Incoming HTTP request
+        @param category_slug (optional) Incoming category_slug (used in the request URL.)
+    """
+    # find category if passed into the request
+    categories, statuses_to_display, archives, blogroll = common(request.user.is_authenticated())
+
+    article_post_index = 0
+    if 'start' in request.GET:
+        article_post_index = int(request.GET['start'])
+
+    search_tags = []
+    selected_category = None
+
+    all_posts = Post.query(statuses_to_display,
                     search_tags,
                     year, month
                 )
 
     # cap post start and end ranges based on available posts
-    post_count = all_posts.count()
-    post_page_count = settings.CK_METABLOG_PER_PAGE_COUNT
-
-    if post_count > 0:
-        if article_post_index < 0:
-            article_post_index = 0
-        elif article_post_index >= post_count:
-            article_post_index = post_count - 1
-        article_post_index_end = min(article_post_index + post_page_count, post_count)
-
-        posts = all_posts[article_post_index:article_post_index_end]
-
-        # determine whether we need links to prior or next page posts
-        if article_post_index > 0:
-            next_post_index = max(article_post_index - post_page_count, 0)
-        else:
-            next_post_index = -1
-        if article_post_index + post_page_count < post_count:
-            prev_post_index = min(article_post_index + post_page_count, post_count - 1)
-        else:
-            prev_post_index = -1
-    else:
-        next_post_index = -1
-        prev_post_index = -1
-        posts = None
-
-    first_post_id = None
-    if posts and len(posts) > 0:
-        first_post_id = posts[0].id
+    posts, first_post_id, next_post_index, prev_post_index = cull_posts(all_posts,
+                    article_post_index,
+                    settings.CK_METABLOG_PER_PAGE_COUNT)
 
     context = {
         'page_title': settings.CK_SITE_TITLE,
