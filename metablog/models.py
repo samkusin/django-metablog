@@ -10,6 +10,8 @@ from django.utils import timezone
 from django.contrib.sitemaps import ping_google
 from django.conf import settings
 
+from wysihtml5.fields import Wysihtml5TextField
+
 
 class Tag(models.Model):
     """Tags are used for searching and organizing blog posts.
@@ -48,7 +50,7 @@ class Post(models.Model):
     prev_post = models.OneToOneField('self', related_name='next', null=True, blank=True)
     next_post = models.OneToOneField('self', related_name='prev', null=True, blank=True)
     tags = models.ManyToManyField(Tag)
-    text = models.TextField()
+    text = Wysihtml5TextField()
     atj_word_count = models.SmallIntegerField(verbose_name='After the Jump word count', default=150)
 
     NORMAL = 1

@@ -1,8 +1,7 @@
-from django import forms
 from django.contrib import admin
 
 # used for rich textareas
-from ckeditor.widgets import CKEditorWidget
+from wysihtml5.admin import AdminWysihtml5TextFieldMixin
 
 from models import Tag, Post, Category, Slide, SlideShow, SlideShowSlide, Link
 
@@ -21,18 +20,7 @@ admin.site.register(Tag, TagAdmin)
 ################################################################################
 
 
-class PostAdminForm(forms.ModelForm):
-
-    class Meta:
-        model = Post
-
-    def __init__(self, *args, **kwargs):
-        super(PostAdminForm, self).__init__(*args, **kwargs)
-        self.fields['text'].widget = CKEditorWidget(config_name='edit_post')
-
-
-class PostAdmin(admin.ModelAdmin):
-    form = PostAdminForm
+class PostAdmin(AdminWysihtml5TextFieldMixin, admin.ModelAdmin):
     prepopulated_fields = {
         "slug": ("title",)
     }
