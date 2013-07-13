@@ -52,6 +52,7 @@ class Post(models.Model):
     tags = models.ManyToManyField(Tag)
     text = Wysihtml5TextField()
     atj_word_count = models.SmallIntegerField(verbose_name='After the Jump word count', default=150)
+    description = models.CharField(max_length=150, default="")
 
     NORMAL = 1
     PREFERRED = 2

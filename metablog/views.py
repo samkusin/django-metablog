@@ -12,6 +12,7 @@ from django.core.urlresolvers import reverse
 from models import Post, Category, Link, Tag
 
 from datetime import datetime
+from datetime import date
 from time import mktime
 
 import json
@@ -59,9 +60,7 @@ def create_post_archive(posts):
         ]
     }
     """
-    posts = posts.all().values(
-                'id', 'title', 'slug', 'post_date', 'status'
-            )
+    posts = posts.all().values('id', 'title', 'slug', 'post_date', 'status')
 
     archive_stack = []
     archive_stack.append([])        # archive list (top-level contains years)
@@ -227,11 +226,12 @@ def home(request, category_slug):
                 selected_category = category
 
     all_posts = Post.query(statuses_to_display,
-                    search_tags
-                )
+                           search_tags
+                           )
 
     # cap post start and end ranges based on available posts
-    posts, first_post_id, next_post_index, prev_post_index = cull_posts(all_posts,
+    posts, first_post_id, next_post_index, prev_post_index = cull_posts(
+                    all_posts,
                     article_post_index,
                     settings.CK_METABLOG_PER_PAGE_COUNT)
 
@@ -250,9 +250,8 @@ def home(request, category_slug):
 
     # render
     return render_to_response("home.html",
-        context,
-        context_instance=RequestContext(request)
-    )
+                              context,
+                              context_instance=RequestContext(request))
 
 
 def archive(request, year, month):
@@ -273,19 +272,28 @@ def archive(request, year, month):
     selected_category = None
 
     all_posts = Post.query(statuses_to_display,
-                    search_tags,
-                    year, month
-                )
+                           search_tags,
+                           year, month
+                           )
 
     # cap post start and end ranges based on available posts
     posts, first_post_id, next_post_index, prev_post_index = cull_posts(all_posts,
                     article_post_index,
                     settings.CK_METABLOG_PER_PAGE_COUNT)
 
+    archive_month = False
+    if not month:
+        archive_date = date(int(year), 1, 1)
+    else:
+        archive_date = date(int(year), int(month), 1)
+        archive_month = True
+
     context = {
         'page_title': settings.CK_SITE_TITLE,
         'categories': categories,
         'selected_category': selected_category,
+        'archive_date': archive_date,
+        'archive_month': archive_month,
         'blog_posts': posts,
         'archives': archives,
         'blogroll': blogroll,
@@ -296,9 +304,8 @@ def archive(request, year, month):
 
     # render
     return render_to_response("home.html",
-        context,
-        context_instance=RequestContext(request)
-    )
+                              context,
+                              context_instance=RequestContext(request))
 
 
 def except_404_view(request):
@@ -316,10 +323,7 @@ def except_404_view(request):
     }
 
     # render
-    return render_to_response("404.html",
-        context,
-        context_instance=RequestContext(request)
-    )
+    return render_to_response("404.html", context, context_instance=RequestContext(request))
 
 
 def article(request, post_slug):
@@ -343,13 +347,13 @@ def article(request, post_slug):
 
     # render
     return render_to_response("post.html",
-        {
-            'page_title': settings.CK_SITE_TITLE,
-            'categories': categories,
-            'selected_category': None,
-            'blog_post': post,
-            'archives': archives,
-            'blogroll': blogroll,
-            'first_post_id': first_post_id
-        },
-        context_instance=RequestContext(request))
+                                {
+                                    'page_title': settings.CK_SITE_TITLE,
+                                    'categories': categories,
+                                    'selected_category': None,
+                                    'blog_post': post,
+                                    'archives': archives,
+                                    'blogroll': blogroll,
+                                    'first_post_id': first_post_id
+                                },
+                                context_instance=RequestContext(request))
