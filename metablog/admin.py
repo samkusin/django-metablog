@@ -4,8 +4,7 @@ from django.contrib import admin
 from wysihtml5.admin import AdminWysihtml5TextFieldMixin
 
 from models import Tag, Post, Category, Slide, SlideShow, SlideShowSlide, Link
-
-from sorl.thumbnail.admin import AdminImageMixin
+#from sorl.thumbnail.admin import AdminImageMixin
 
 ################################################################################
 
