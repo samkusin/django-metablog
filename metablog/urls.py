@@ -18,6 +18,7 @@ urlpatterns = patterns(
     url(r'^category/(?P<category_slug>[a-zA-Z0-9\^-]+)/atom/$', AtomPostFeed(), name='atom-category-latest'),
     url(r'^category/(?P<category_slug>[a-zA-Z0-9\^-]+)/$', 'cinekine.metablog.views.home',
         name='metablog_category'),
+
     # Default Home page
     url(r'^rss/$', PostFeed(), {'category_slug': None}, name="rss-latest"),
     url(r'^atom/$', AtomPostFeed(), {'category_slug': None}, name='atom-latest'),
