@@ -220,10 +220,19 @@ def home(request, category_slug):
     selected_category = None
 
     if category_slug:
+        print category_slug
         for category in categories:
             if category.tag.slug == category_slug:
                 search_tags.append(category.tag)
                 selected_category = category
+
+        # check if this is a tag
+        if selected_category is None:
+            try:
+                search_tag = Tag.objects.get(slug=category_slug)
+                search_tags.append(search_tag)
+            except:
+                print "No tag found for given slug '" + category_slug
 
     all_posts = Post.query(statuses_to_display,
                            search_tags
