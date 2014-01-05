@@ -220,7 +220,6 @@ def home(request, category_slug):
     selected_category = None
 
     if category_slug:
-        print category_slug
         for category in categories:
             if category.tag.slug == category_slug:
                 search_tags.append(category.tag)

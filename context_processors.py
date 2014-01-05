@@ -5,7 +5,7 @@
 ################################################################################"""
 
 from django.conf import settings
-
+from django.contrib.sites.models import Site
 
 def config(request):
     """
@@ -17,3 +17,10 @@ def config(request):
     if settings.CK_SITE_TITLE:
         context_extras['ck_site_title'] = settings.CK_SITE_TITLE
     return context_extras
+
+def site(request):
+    if hasattr(settings, 'CK_SITE_DOMAIN'):
+	   return {'ck_site_domain': settings.CK_SITE_DOMAIN}
+
+    domain = "http://%s" % Site.objects.get_current().domain
+    return {'ck_site_domain': domain}
