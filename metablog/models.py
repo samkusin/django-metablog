@@ -22,6 +22,11 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+    # Django Overrides
+    @models.permalink
+    def get_absolute_url(self):
+        return ('metablog_category', [self.slug])
+
 
 ################################################################################
 
