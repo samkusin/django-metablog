@@ -11,6 +11,6 @@
 /tmp
 /media
 .DS_Store
-.sublime-project
-.sublime-workspace
+*.sublime-project
+*.sublime-workspace
 
